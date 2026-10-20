@@ -154,8 +154,6 @@ def press_key(key: str) -> None:
 
 
 st.set_page_config(page_title="Calculator", page_icon="🧮")
-st.title("Calculator")
-st.caption("A simple everyday calculator")
 
 st.session_state.setdefault("display", "0")
 st.session_state.setdefault("accumulator", None)
@@ -167,26 +165,32 @@ st.session_state.setdefault("repeat_operand", None)
 st.session_state.setdefault("history", [])
 st.session_state.setdefault("error", "")
 
-with st.container(border=True):
-    st.caption(st.session_state.expression or " ")
-    st.metric("Display", st.session_state.display)
-    if st.session_state.error:
-        st.error(st.session_state.error)
+with st.container(horizontal=True, horizontal_alignment="center"):
+    with st.container(width=420):
+        st.title("Calculator")
+        st.caption("A simple everyday calculator")
 
-for row_index, row in enumerate(KEYPAD):
-    columns = st.columns(4)
-    for column_index, key in enumerate(row):
-        button_type = "primary" if key == "=" else "secondary"
-        columns[column_index].button(
-            key,
-            key=f"key_{row_index}_{column_index}",
-            type=button_type,
-            width="stretch",
-            on_click=press_key,
-            args=(key,),
-        )
+        with st.container(border=True, height=160):
+            st.caption(st.session_state.expression or " ")
+            st.metric("Display", st.session_state.display)
 
-if st.session_state.history:
-    with st.expander("History"):
-        for calculation in st.session_state.history:
-            st.text(calculation)
+        if st.session_state.error:
+            st.error(st.session_state.error)
+
+        for row_index, row in enumerate(KEYPAD):
+            columns = st.columns(4)
+            for column_index, key in enumerate(row):
+                button_type = "primary" if key == "=" else "secondary"
+                columns[column_index].button(
+                    key,
+                    key=f"key_{row_index}_{column_index}",
+                    type=button_type,
+                    width="stretch",
+                    on_click=press_key,
+                    args=(key,),
+                )
+
+        if st.session_state.history:
+            with st.expander("History"):
+                for calculation in st.session_state.history:
+                    st.text(calculation)
