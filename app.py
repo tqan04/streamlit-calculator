@@ -165,6 +165,28 @@ st.session_state.setdefault("repeat_operand", None)
 st.session_state.setdefault("history", [])
 st.session_state.setdefault("error", "")
 
+st.html(
+    """
+    <style>
+    .st-key-calculator_keypad button {
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.32);
+        transition: transform 100ms ease, box-shadow 100ms ease;
+    }
+
+    .st-key-calculator_keypad button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 0 rgba(0, 0, 0, 0.32),
+            0 7px 12px rgba(0, 0, 0, 0.14);
+    }
+
+    .st-key-calculator_keypad button:active:not(:disabled) {
+        transform: translateY(3px);
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.32);
+    }
+    </style>
+    """
+)
+
 with st.container(horizontal=True, horizontal_alignment="center"):
     with st.container(width=420):
         st.title("Calculator")
@@ -177,18 +199,19 @@ with st.container(horizontal=True, horizontal_alignment="center"):
         if st.session_state.error:
             st.error(st.session_state.error)
 
-        for row_index, row in enumerate(KEYPAD):
-            columns = st.columns(4)
-            for column_index, key in enumerate(row):
-                button_type = "primary" if key == "=" else "secondary"
-                columns[column_index].button(
-                    key,
-                    key=f"key_{row_index}_{column_index}",
-                    type=button_type,
-                    width="stretch",
-                    on_click=press_key,
-                    args=(key,),
-                )
+        with st.container(key="calculator_keypad"):
+            for row_index, row in enumerate(KEYPAD):
+                columns = st.columns(4)
+                for column_index, key in enumerate(row):
+                    button_type = "primary" if key == "=" else "secondary"
+                    columns[column_index].button(
+                        key,
+                        key=f"key_{row_index}_{column_index}",
+                        type=button_type,
+                        width="stretch",
+                        on_click=press_key,
+                        args=(key,),
+                    )
 
         if st.session_state.history:
             with st.expander("History"):
