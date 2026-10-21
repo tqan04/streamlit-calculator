@@ -173,15 +173,15 @@ def test_invalid_factorial_shows_error_without_changing_calculator_state(
     )
 
 
-def test_operator_buttons_stay_at_the_right_edge_of_their_keypad_rows():
+def test_operator_buttons_share_the_same_size_and_right_edge_column():
     app = AppTest.from_file(Path(__file__).parents[1] / "app.py").run()
 
-    # The ÷ row has five keys; the other operator rows have four. Their
-    # final-cell positions keep all four operators on the keypad's right edge.
+    # All keypad rows use five equal-width columns, with each operator at the
+    # far-right column.
     for key, label in (
         ("key_1_4", "÷"),
-        ("key_2_3", "×"),
-        ("key_3_3", "−"),
-        ("key_4_3", "+"),
+        ("key_2_4", "×"),
+        ("key_3_4", "−"),
+        ("key_4_4", "+"),
     ):
         assert app.button(key=key).label == label
