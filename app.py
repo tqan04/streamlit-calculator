@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import streamlit as st
 
-from calculator import add, divide, multiply, subtract
+from calculator import add, divide, multiply, power, square_root, subtract
 
 
 OPERATIONS = {
@@ -10,13 +10,14 @@ OPERATIONS = {
     "−": subtract,
     "×": multiply,
     "÷": divide,
+    "^": power,
 }
 KEYPAD = (
-    ("AC", "⌫", "%", "÷"),
-    ("7", "8", "9", "×"),
-    ("4", "5", "6", "−"),
-    ("1", "2", "3", "+"),
-    ("±", "0", ".", "="),
+    ("AC", "⌫", "%", "√", "^"),
+    ("7", "8", "9", "÷"),
+    ("4", "5", "6", "×"),
+    ("1", "2", "3", "−"),
+    ("±", "0", ".", "+"),
 )
 
 
@@ -92,6 +93,26 @@ def press_key(key: str) -> None:
         state.repeat_operand = None
         return
 
+    if key == "√":
+        value = Decimal(state.display)
+        try:
+            result = square_root(value)
+            state.expression = f"√({format_number(value)}) ="
+            state.history.insert(
+                0,
+                f"{state.expression} {format_number(result)}",
+            )
+            state.history = state.history[:10]
+            state.display = format_number(result)
+            state.accumulator = None
+            state.operator = None
+            state.start_new = True
+            state.repeat_operator = None
+            state.repeat_operand = None
+        except ValueError as error:
+            state.error = str(error)
+        return
+
     if key in OPERATIONS:
         try:
             if state.operator is not None and not state.start_new:
@@ -109,6 +130,8 @@ def press_key(key: str) -> None:
             state.repeat_operand = None
         except ZeroDivisionError:
             state.error = "Cannot divide by zero."
+        except ValueError as error:
+            state.error = str(error)
         return
 
     if key == "=":
@@ -151,6 +174,8 @@ def press_key(key: str) -> None:
                 state.start_new = True
         except ZeroDivisionError:
             state.error = "Cannot divide by zero."
+        except ValueError as error:
+            state.error = str(error)
 
 
 st.set_page_config(page_title="Calculator", page_icon="🧮")
@@ -200,18 +225,38 @@ with st.container(horizontal=True, horizontal_alignment="center"):
             st.error(st.session_state.error)
 
         with st.container(key="calculator_keypad"):
-            for row_index, row in enumerate(KEYPAD):
-                columns = st.columns(4)
-                for column_index, key in enumerate(row):
-                    button_type = "primary" if key == "=" else "secondary"
-                    columns[column_index].button(
+            with st.container(horizontal=True, horizontal_alignment="distribute"):
+                for column_index, key in enumerate(KEYPAD[0]):
+                    st.button(
                         key,
-                        key=f"key_{row_index}_{column_index}",
-                        type=button_type,
+                        key=f"key_0_{column_index}",
+                        type="secondary",
                         width="stretch",
                         on_click=press_key,
                         args=(key,),
                     )
+
+            for row_index, row in enumerate(KEYPAD[1:], start=1):
+                columns = st.columns(len(row))
+                for column_index, key in enumerate(row):
+                    columns[column_index].button(
+                        key,
+                        key=f"key_{row_index}_{column_index}",
+                        type="secondary",
+                        width="stretch",
+                        on_click=press_key,
+                        args=(key,),
+                    )
+
+            equals_columns = st.columns(4)
+            equals_columns[3].button(
+                "=",
+                key="key_equals",
+                type="primary",
+                width="stretch",
+                on_click=press_key,
+                args=("=",),
+            )
 
         if st.session_state.history:
             with st.expander("History"):
