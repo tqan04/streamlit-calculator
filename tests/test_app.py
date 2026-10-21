@@ -188,4 +188,5 @@ def test_operator_buttons_share_the_same_size_and_right_edge_column():
 
     assert app.button(key="key_1_3").label == "%"
     assert app.button(key="key_2_3").label == "1/x"
-    assert app.button(key="key_5_1").label == "."
+    assert app.button(key="key_5_1").label == "0"
+    assert app.button(key="key_5_2").label == "."
