@@ -11,7 +11,7 @@ def test_reciprocal_updates_expression_and_is_recorded_in_history():
     app.session_state["start_new"] = False
     app.run()
 
-    app.button(key="key_5_1").click().run()
+    app.button(key="key_2_3").click().run()
 
     assert app.session_state["display"] == "0.25"
     assert app.session_state["expression"] == "( 1 ÷ ( 4 ) )"
@@ -32,7 +32,7 @@ def test_reciprocal_of_zero_shows_error_without_changing_calculator_state():
     app.session_state["history"] = ["previous calculation"]
     app.run()
 
-    app.button(key="key_5_1").click().run()
+    app.button(key="key_2_3").click().run()
 
     assert app.session_state["display"] == "0"
     assert app.session_state["expression"] == "0"
@@ -48,7 +48,7 @@ def test_reciprocal_uses_a_parenthesized_current_operand():
     app.session_state["start_new"] = True
     app.run()
 
-    app.button(key="key_5_1").click().run()
+    app.button(key="key_2_3").click().run()
 
     assert app.session_state["display"] == "0.25"
     assert app.session_state["expression"] == "( 1 ÷ ( ( 2 + 2 ) ) )"
@@ -67,7 +67,7 @@ def test_reciprocal_after_power_keeps_the_reciprocal_grouped():
     app.session_state["start_new"] = False
     app.run()
 
-    app.button(key="key_5_1").click().run()
+    app.button(key="key_2_3").click().run()
 
     assert app.session_state["display"] == "0.3333333333333333333333333333"
     assert app.session_state["expression"] == "2 ^ ( 1 ÷ ( 3 ) )"
@@ -87,8 +87,8 @@ def test_reciprocal_twice_returns_original_value():
     app.session_state["start_new"] = False
     app.run()
 
-    app.button(key="key_5_1").click().run()
-    app.button(key="key_5_1").click().run()
+    app.button(key="key_2_3").click().run()
+    app.button(key="key_2_3").click().run()
 
     assert app.session_state["display"] == "4"
     assert app.session_state["expression"] == "( 1 ÷ ( ( 1 ÷ ( 4 ) ) ) )"
@@ -185,3 +185,7 @@ def test_operator_buttons_share_the_same_size_and_right_edge_column():
         ("key_4_4", "+"),
     ):
         assert app.button(key=key).label == label
+
+    assert app.button(key="key_1_3").label == "%"
+    assert app.button(key="key_2_3").label == "1/x"
+    assert app.button(key="key_5_1").label == "."
