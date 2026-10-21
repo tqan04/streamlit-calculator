@@ -99,3 +99,75 @@ def test_reciprocal_twice_returns_original_value():
     assert app.session_state["history"] == [
         "( 1 ÷ ( ( 1 ÷ ( 4 ) ) ) ) = 4"
     ]
+
+
+@pytest.mark.parametrize(
+    ("display", "tokens", "expected"),
+    [("5", ["5"], "120"), ("0", ["0"], "1")],
+)
+def test_factorial_updates_expression_and_is_recorded_in_history(
+    display, tokens, expected
+):
+    app = AppTest.from_file(Path(__file__).parents[1] / "app.py")
+    app.session_state["display"] = display
+    app.session_state["tokens"] = tokens
+    app.session_state["start_new"] = False
+    app.run()
+
+    app.button(key="key_1_2").click().run()
+
+    assert app.session_state["display"] == expected
+    assert app.session_state["expression"] == f"( {display} ) !"
+    assert app.session_state["tokens"] == ["(", display, ")", "!"]
+
+    app.button(key="key_equals").click().run()
+
+    assert app.session_state["display"] == expected
+    assert app.session_state["history"] == [
+        f"( {display} ) ! = {expected}"
+    ]
+
+
+def test_factorial_applies_to_the_current_parenthesized_operand():
+    app = AppTest.from_file(Path(__file__).parents[1] / "app.py")
+    app.session_state["display"] = "3"
+    app.session_state["tokens"] = ["2", "+", "(", "2", "+", "3", ")"]
+    app.session_state["start_new"] = True
+    app.run()
+
+    app.button(key="key_1_2").click().run()
+
+    assert app.session_state["display"] == "120"
+    assert app.session_state["expression"] == "2 + ( ( 2 + 3 ) ) !"
+
+    app.button(key="key_equals").click().run()
+
+    assert app.session_state["history"] == [
+        "2 + ( ( 2 + 3 ) ) ! = 122"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("display", "tokens"),
+    [("-5", ["-5"]), ("2.5", ["2.5"])],
+)
+def test_invalid_factorial_shows_error_without_changing_calculator_state(
+    display, tokens
+):
+    app = AppTest.from_file(Path(__file__).parents[1] / "app.py")
+    app.session_state["display"] = display
+    app.session_state["expression"] = display
+    app.session_state["tokens"] = tokens
+    app.session_state["start_new"] = False
+    app.session_state["history"] = ["previous calculation"]
+    app.run()
+
+    app.button(key="key_1_2").click().run()
+
+    assert app.session_state["display"] == display
+    assert app.session_state["expression"] == display
+    assert app.session_state["tokens"] == tokens
+    assert app.session_state["history"] == ["previous calculation"]
+    assert app.session_state["error"] == (
+        "Factorial is only defined for non-negative integers."
+    )
