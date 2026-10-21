@@ -41,11 +41,22 @@ def reciprocal(value):
     return divide(1, value)
 
 
+def factorial(value):
+    numeric_value = value if isinstance(value, Decimal) else Decimal(str(value))
+    if (
+        not numeric_value.is_finite()
+        or numeric_value < 0
+        or numeric_value != numeric_value.to_integral_value()
+    ):
+        raise ValueError("Factorial is only defined for non-negative integers.")
+    return Decimal(math.factorial(int(numeric_value)))
+
+
 def evaluate_expression(expression):
     tokens = []
     position = 0
     token_pattern = re.compile(
-        r"\s*([0-9]+(?:\.[0-9]*)?|\.[0-9]+|[()+\-*/^√])"
+        r"\s*([0-9]+(?:\.[0-9]*)?|\.[0-9]+|[()+\-*/^√!])"
     )
     operator_aliases = {"−": "-", "×": "*", "÷": "/"}
     normalized_expression = expression.translate(
@@ -73,18 +84,22 @@ def evaluate_expression(expression):
         token = tokens[position]
         if token == "√":
             position += 1
-            return square_root(parse_primary())
-        if token == "(":
+            value = square_root(parse_primary())
+        elif token == "(":
             position += 1
             value = parse_expression()
             if position >= len(tokens) or tokens[position] != ")":
                 raise ValueError("Unmatched opening parenthesis.")
             position += 1
-            return value
-        if token == ")" or token in {"+", "-", "*", "/", "^"}:
+        elif token == ")" or token in {"+", "-", "*", "/", "^", "!"}:
             raise ValueError("Expected a number or opening parenthesis.")
-        position += 1
-        return Decimal(token)
+        else:
+            position += 1
+            value = Decimal(token)
+        while position < len(tokens) and tokens[position] == "!":
+            position += 1
+            value = factorial(value)
+        return value
 
     def parse_power():
         nonlocal position

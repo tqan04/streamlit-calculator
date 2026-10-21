@@ -6,6 +6,7 @@ from calculator import (
     add,
     divide,
     evaluate_expression,
+    factorial,
     multiply,
     power,
     reciprocal,
@@ -23,7 +24,7 @@ OPERATIONS = {
 }
 KEYPAD = (
     ("AC", "⌫", "(", ")"),
-    ("√", "^", "%", "÷"),
+    ("√", "^", "!", "%", "÷"),
     ("7", "8", "9", "×"),
     ("4", "5", "6", "−"),
     ("1", "2", "3", "+"),
@@ -52,6 +53,11 @@ def is_number_token(token: str) -> bool:
 def current_operand_start(tokens: list[str]) -> int | None:
     if not tokens:
         return None
+    if tokens[-1] == "!":
+        end = len(tokens)
+        while end > 0 and tokens[end - 1] == "!":
+            end -= 1
+        return current_operand_start(tokens[:end])
     if is_number_token(tokens[-1]):
         start = len(tokens) - 1
     elif tokens[-1] == ")":
@@ -128,7 +134,7 @@ def press_key(key: str) -> None:
 
     if key in "0123456789.":
         if state.start_new:
-            if state.tokens and state.tokens[-1] == ")":
+            if state.tokens and state.tokens[-1] in (")", "!"):
                 state.tokens.append("×")
             value = "0." if key == "." else key
             state.tokens.append(value)
@@ -261,6 +267,32 @@ def press_key(key: str) -> None:
         state.repeat_operand = None
         return
 
+    if key == "!":
+        start = current_operand_start(state.tokens)
+        if start is None and not state.tokens:
+            operand_tokens = [state.display]
+            prefix_tokens = []
+        elif start is not None:
+            prefix_tokens = state.tokens[:start]
+            operand_tokens = state.tokens[start:]
+        else:
+            state.error = "Enter a number before calculating its factorial."
+            return
+        try:
+            value = evaluate_expression(" ".join(operand_tokens))
+            result = factorial(value)
+        except ValueError as error:
+            state.error = str(error)
+            return
+
+        state.tokens = prefix_tokens + ["("] + operand_tokens + [")", "!"]
+        state.display = format_number(result)
+        update_expression(state)
+        state.start_new = True
+        state.repeat_operator = None
+        state.repeat_operand = None
+        return
+
     if key in OPERATIONS:
         if not state.tokens:
             state.tokens.append(state.display)
@@ -281,7 +313,7 @@ def press_key(key: str) -> None:
                     return
             else:
                 state.tokens[-1] = key
-        elif is_number_token(state.tokens[-1]) or state.tokens[-1] == ")":
+        elif is_number_token(state.tokens[-1]) or state.tokens[-1] in (")", "!"):
             state.tokens.append(key)
         update_expression(state)
         state.start_new = True
@@ -291,7 +323,7 @@ def press_key(key: str) -> None:
 
     if key == "(":
         if state.tokens and (
-            is_number_token(state.tokens[-1]) or state.tokens[-1] == ")"
+            is_number_token(state.tokens[-1]) or state.tokens[-1] in (")", "!")
         ):
             state.tokens.append("×")
         state.tokens.append("(")
