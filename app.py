@@ -453,7 +453,10 @@ with st.container(horizontal=True, horizontal_alignment="center"):
                     )
 
             for row_index, row in enumerate(KEYPAD[1:], start=1):
-                columns = st.columns(len(row))
+                # Each row fills the keypad width; stretching the final button
+                # keeps the right edges of +, −, ×, and ÷ on one shared line,
+                # even though the ÷ row contains one additional key.
+                columns = st.columns(len(row), gap="medium")
                 for column_index, key in enumerate(row):
                     columns[column_index].button(
                         key,

@@ -171,3 +171,17 @@ def test_invalid_factorial_shows_error_without_changing_calculator_state(
     assert app.session_state["error"] == (
         "Factorial is only defined for non-negative integers."
     )
+
+
+def test_operator_buttons_stay_at_the_right_edge_of_their_keypad_rows():
+    app = AppTest.from_file(Path(__file__).parents[1] / "app.py").run()
+
+    # The ÷ row has five keys; the other operator rows have four. Their
+    # final-cell positions keep all four operators on the keypad's right edge.
+    for key, label in (
+        ("key_1_4", "÷"),
+        ("key_2_3", "×"),
+        ("key_3_3", "−"),
+        ("key_4_3", "+"),
+    ):
+        assert app.button(key=key).label == label
