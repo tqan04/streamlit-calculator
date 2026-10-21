@@ -4,7 +4,9 @@ A simple keypad-style calculator built with Python and Streamlit.
 
 ## Features
 
-- Addition, subtraction, multiplication, division, powers, and square roots
+- Addition, subtraction, multiplication, division, powers, square roots, and
+  parentheses for grouped calculations (`e` enters an expression in the
+  terminal calculator)
 - Percentage, sign change, clear, and backspace
 - Repeated equals and recent calculation history
 - Light and dark appearance modes
