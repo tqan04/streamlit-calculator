@@ -37,6 +37,10 @@ def divide(a, b):
     return a / b
 
 
+def reciprocal(value):
+    return divide(1, value)
+
+
 def evaluate_expression(expression):
     tokens = []
     position = 0

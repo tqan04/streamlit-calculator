@@ -8,6 +8,7 @@ from calculator import (
     evaluate_expression,
     multiply,
     power,
+    reciprocal,
     square_root,
     subtract,
 )
@@ -26,7 +27,7 @@ KEYPAD = (
     ("7", "8", "9", "×"),
     ("4", "5", "6", "−"),
     ("1", "2", "3", "+"),
-    ("±", "0", "."),
+    ("±", "1/x", "0", "."),
 )
 
 
@@ -46,6 +47,41 @@ def is_number_token(token: str) -> bool:
         return True
     except InvalidOperation:
         return False
+
+
+def current_operand_start(tokens: list[str]) -> int | None:
+    if not tokens:
+        return None
+    if is_number_token(tokens[-1]):
+        start = len(tokens) - 1
+    elif tokens[-1] == ")":
+        depth = 0
+        start = None
+        for index in range(len(tokens) - 1, -1, -1):
+            if tokens[index] == ")":
+                depth += 1
+            elif tokens[index] == "(":
+                depth -= 1
+                if depth == 0:
+                    start = index
+                    break
+        if start is None:
+            return None
+        if start > 0 and tokens[start - 1] == "√":
+            start -= 1
+    else:
+        return None
+
+    if (
+        start > 0
+        and tokens[start - 1] == "−"
+        and (
+            start == 1
+            or tokens[start - 2] in ("(", "+", "−", "×", "÷", "^")
+        )
+    ):
+        start -= 1
+    return start
 
 
 def update_expression(state) -> None:
@@ -189,6 +225,40 @@ def press_key(key: str) -> None:
             state.repeat_operand = None
         except ValueError as error:
             state.error = str(error)
+        return
+
+    if key == "1/x":
+        start = current_operand_start(state.tokens)
+        if start is None and not state.tokens:
+            operand_tokens = [state.display]
+            prefix_tokens = []
+        elif start is not None:
+            prefix_tokens = state.tokens[:start]
+            operand_tokens = state.tokens[start:]
+        else:
+            state.error = "Enter a number before calculating its reciprocal."
+            return
+        try:
+            value = evaluate_expression(" ".join(operand_tokens))
+            result = reciprocal(value)
+        except ZeroDivisionError as error:
+            state.error = str(error)
+            return
+        except ValueError as error:
+            state.error = str(error)
+            return
+
+        state.tokens = (
+            prefix_tokens
+            + ["(", "1", "÷", "("]
+            + operand_tokens
+            + [")", ")"]
+        )
+        state.display = format_number(result)
+        update_expression(state)
+        state.start_new = True
+        state.repeat_operator = None
+        state.repeat_operand = None
         return
 
     if key in OPERATIONS:
